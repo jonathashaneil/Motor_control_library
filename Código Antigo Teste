@@ -1,0 +1,186 @@
+#include <LiquidCrystal.h> //Biblioteca do display
+LiquidCrystal lcd(3,4,10,11,12,13); //Pinos do display: RS, Enable, 4 pinos de dados (RH ligado no terra e 4 pinos não usdos)
+#include <TimerOne.h> //Biblioteca do Timer
+#include <Wire.h>
+#define pressureSensor A0
+int16_t PIDresults = 0;
+const float pressureOffSet = 38.6;
+float pressure = 0;
+float setpoint = 2.0;
+float erro = 0;
+float erroIntegral = 0;
+float erroant = 0;
+float integral = 0;
+float derivada = 0;
+int pid;
+float volts;
+// kp -4    ki   0.8
+float kp = -4.0;
+float ki = 0.0;
+float kd = 0.0;
+int i = 0;
+float dt = 0.017;
+int spd = 0;
+
+//Incógnitas da Função Interrupcao:
+int segundos; //Conta a cada 6 segundos
+int minutos; //Conta a cada minuto 
+int horas; //Conta a cada hora
+
+//Estado PBS ou SDS:
+int estado;
+#define PBS 1
+#define SDS 2
+
+//Entradas dos motores:
+int motor_remocao=0;
+int motorPBS=1;
+int motorSDS=2;
+
+int x; //Incógnita que conta quantas vezes o programa do motor foi realizado
+
+//Tempo de cada motor em funcionamento:
+#define tempoPBS 15 //Tempo do PBS: 15 minutos
+#define tempoSDS 3  //Tempo do SDS: 3 horas
+#define tempoPBS_final 12 //Tempo final do PBS: 12 horas
+
+//Tempo de enchimento/remoção do recipiente de acordo com o volume e a vazão:
+#define vazao 0.001111 //vazão do motor em ml/ms (66,67 ml/min)
+byte volume; //volume do recipiente em ml 
+unsigned long tempo=volume/vazao; //Tempo de remoção/enchimento do recipiente em ms
+
+void requestEvent()
+{
+  Wire.write(spd);
+}
+
+void setup() {
+  Serial.begin(9600); //Inicializa a porta serial
+  Wire.begin(54);
+  Wire.onRequest(requestEvent);
+//Timer1.initialize(800000); // 0.5 segundos 
+//Timer1.attachInterrupt(readPressure);
+Timer1.initialize(6000000); //Define a interrupção em cada 6 segundos
+Timer1.attachInterrupt(interrupcao); //Realiza a função interrupcao a cada 6 segundos para contar o tempo 
+pinMode(motor_remocao,OUTPUT);
+pinMode(motorPBS,OUTPUT);
+pinMode(motorSDS,OUTPUT);
+lcd.begin(16,2); //Inicializa a comunicação com o display
+
+}
+
+
+void interrupcao(){ //Conta o tempo
+    segundos++;
+  if(segundos>=10){minutos++; segundos=0;};
+  if(minutos>=60){horas++;minutos=0;};
+  }
+
+void ligado(int horas_desejadas,int min_desejados){ //Define o motor ligado no tempo desejado
+  horas=0; minutos=0; segundos=0;
+  while(horas<=horas_desejadas && minutos<=min_desejados){
+  unsigned long StartTime = millis();
+  float medPressure = 0;
+  for (i=0; i<100; i++)
+  {
+    //pressure = (analogRead(pressureSensor); - pressureOffSet )*10;
+    volts = analogRead(pressureSensor) * 0.0049;
+    pressure = ((volts/5.0) - 0.04)/0.09;
+    medPressure += pressure;  
+  }
+  medPressure = medPressure/i + 0.1511;
+  /*Serial.print("Pressao: ");
+  Serial.print(medPressure,3);
+  Serial.print(" kPa\n");
+  delay(20);*/
+  erro = medPressure-setpoint;
+  /*erroIntegral += erro;
+  if (erroIntegral > 100) erroIntegral = 100;
+  if (erroIntegral < 1) erroIntegral = 1;
+  integral = erroIntegral*dt;
+  derivada = (erro-erroant)/dt;*/
+  //pid = kp*erro + ki*integral + kd*derivada;
+  integral=+erro;
+  derivada = (erro-erroant);
+  pid = kp*erro  + ki*integral + kd*derivada;
+  spd+=pid;
+  if (spd > 100) spd = 100;
+  if (spd < 1) spd = 1;
+ 
+
+
+  erroant = erro;
+
+  /*unsigned long CurrentTime = millis();
+  unsigned long ElapsedTime = CurrentTime - StartTime;
+  Serial.print(ElapsedTime);
+  Serial.print("\n");*/
+}
+}
+
+
+void trocapbs(){ //Função para a troca de PBS
+ if(estado==PBS){
+ lcd.clear(); //Apaga tudo do display LCD
+ digitalWrite(motor_remocao,HIGH); //Esvazia o recipiente
+ lcd.print("Esvaziando"); //Escreve no display LCD
+ Serial.println("Esvaziando"); //Escreve no monitor serial
+ delay(tempo);
+ digitalWrite(motor_remocao,LOW);
+ lcd.clear(); //Apaga tudo do display LCD
+ digitalWrite(motorPBS,HIGH); //Enche com PBS
+ lcd.print("Enchendo com PBS"); //Escreve no display LCD
+ Serial.println("Enchendo com PBS"); //Escreve no monitor serial
+ delay(tempo);
+ digitalWrite(motorPBS,LOW);
+ lcd.clear();}} //Apaga tudo do display LCD
+  
+void trocasds(){ //Função para a troca de SDS
+ if(estado==SDS){
+ lcd.clear(); //Apaga tudo do display LCD
+ digitalWrite(motor_remocao,HIGH); //Esvazia o recipiente
+ lcd.print("Esvaziando"); //Escreve no display LCD
+ Serial.println("Esvaziando"); //Escreve no monitor serial
+ delay(tempo);
+ digitalWrite(motor_remocao,LOW);
+ lcd.clear(); //Apaga tudo do display LCD
+ digitalWrite(motorSDS,HIGH); //Enche com SDS
+ lcd.print("Enchendo com SDS"); //Escreve no display LCD
+ Serial.println("Enchendo com SDS"); //Escreve no monitor serial
+ delay(tempo);
+ digitalWrite(motorSDS,LOW);
+ lcd.clear();}} //Apaga tudo do display LCD
+
+ void loop() {
+
+  
+  if(Serial.available()){
+    volume = Serial.read();}
+    else{Serial.println("Qual o volume utilizado?");}
+    
+estado=PBS;
+for(x=0;x<3;x++){ //Repete 3 vezes
+  if(estado==PBS){
+    trocapbs(); //Esvazia e enche
+    lcd.print("PBS por 15 minutos"); //Escreve no display LCD
+    Serial.println("PBS por 15 minutos"); //Escreve no monitor serial
+    ligado(0,tempoPBS); //PBS por 15 minutos
+    estado=SDS; //Troca o estado para SDS
+  }
+  if(estado==SDS){
+    trocasds(); //Esvazia e enche
+    lcd.print("SDS por 3 horas"); //Escreve no display LCD
+    Serial.println("SDS por 3 horas"); //Escreve no monitor serial
+    ligado(tempoSDS,0); //SDS por 3 horas
+    estado=PBS; //Troca o estado para PBS
+  }
+}
+for(x=0;x<2;x++){ //Repete 2 vezes no final
+  if(estado==PBS){ 
+    trocapbs(); //Esvazia e enche
+    lcd.print("PBS por 12 horas"); //Escreve no display LCD
+    Serial.println("PBS por 12 horas"); //Escreve no monitor serial
+    ligado(tempoPBS_final,0); //PBS por 12 horas 2 vezes
+    
+  }}
+}
