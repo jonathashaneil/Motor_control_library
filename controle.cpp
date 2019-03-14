@@ -30,6 +30,8 @@ void Descelularizacao::configuracao(){
   digitalWrite(motorDC_2, HIGH);
   digitalWrite(motorDC_3, HIGH);
   digitalWrite(motorDC_4, HIGH);
+  Timer1.initialize(6000000);
+  Timer1.attachInterrupt(interrupcao);
 }
 
 void Descelularizacao::Enviar_velocidade(int speed){ 
@@ -91,4 +93,15 @@ void Descelularizacao::alterar_PID(float novo_kp,float novo_ki,float novo_kd){
 
 int Descelularizacao::teste(int x){
    return x+2;
+}
+
+void Descelularizacao::interrupcao(){
+  segundos++;
+  if(segundos>=10){minutos++; segundos=0;}
+}
+
+void Descelularizacao::tempo_def(unsigned long t){
+  segundos=0; minutos=0;
+  if(minutos>=t){tempo=1;}
+  else {tempo=0;}  
 }
