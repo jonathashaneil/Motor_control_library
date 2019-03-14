@@ -43,6 +43,12 @@ float ki = -0.5;
 float kd = -0.0;
 int i;	
 
+void interrupcao();
+int segundos;
+int minutos;
+void tempo_def(unsigned long t);
+int tempo;
+
 
 };
 
