@@ -150,10 +150,10 @@ x){
 void Descelularizacao::ligar (int m){
   if(m=3){
     Descelularizacao::ON_MotorDC_3();
-    vazao = 67.9260292694;}
+    vazao = 67.9260;}
   if(m=4){
     Descelularizacao::ON_MotorDC_4();
-    vazao = 52.039549061;}
+    vazao = 52.0395;}
   }
 
 void Descelularizacao::motor (float pressao, int tempo, char inicio[10], char final[10]){
@@ -199,6 +199,4 @@ void Descelularizacao::motor (float pressao, int tempo, char inicio[10], char fi
     
 }
 
-  
-  
   
