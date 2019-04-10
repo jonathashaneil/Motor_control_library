@@ -9,8 +9,8 @@ void setup() {
     
 descel.tempo = 15; //Em minutos
 descel.x = 3; //Qual motor será utilizado para enchimento
-descel.inicio[10] = "encher";
-descel.final[10] = "esvaziar";
+descel.inicio == "encher";
+descel.final == "esvaziar";
 descel.volume_total = 400; //Em mL
 descel.volume_critico = 50; //Em mL
 
@@ -19,8 +19,6 @@ descel.volume_critico = 50; //Em mL
 void loop() {
   // put your main code here, to run repeatedly:
   
-  descel.motor(descel.pressao,descel.tempo,descel.inicio[10],descel.final[10]);
+  descel.motor(descel.pressao,descel.tempo,descel.inicio,descel.final);
   
-
-
 }
