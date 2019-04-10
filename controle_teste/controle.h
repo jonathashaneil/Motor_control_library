@@ -71,7 +71,7 @@
           char final[10];
           float vazao;
           int tempocriticoesvaziar;
-          float vazaoesvaziar = 70.7681753833;
+          float vazaoesvaziar = 70.7682;
 
      
           
