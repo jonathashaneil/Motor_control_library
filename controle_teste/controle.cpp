@@ -1,14 +1,12 @@
 #include "controle.h"
 
-    
-    int segundos=0;
-    int minutos=0;
-    int tempo;
+   int segundos=0;
+   int minutos=0;
+   int tempo;
 
-    LiquidCrystal lcd1 (3,4,10,11,12,13);
+   LiquidCrystal lcd1 (3,4,10,11,12,13);
 
 void interrupcao(){
-
   segundos++;
   if(segundos>=10){minutos++; segundos=0;}
 }
@@ -16,12 +14,6 @@ void interrupcao(){
 void zerar_tempo(){
  segundos=0;
  minutos=0;
-}
-
-byte tempo_def(unsigned long t){
-
-  if(minutos>=t){return 0;}
-  else {return 1;}  
 }
 
 Descelularizacao::Descelularizacao(){}
@@ -33,7 +25,6 @@ void requestEvent()
 }*/
 
 void Descelularizacao::Erro(){
-  
 }
 
 void Descelularizacao::configuracao(){
@@ -42,25 +33,21 @@ void Descelularizacao::configuracao(){
   pinMode(botao_Mouse, INPUT);
   pinMode(pin11, OUTPUT);
   pinMode(pin12, OUTPUT);
-  digitalWrite(pin11, LOW);
-  digitalWrite(pin12, LOW);
   pinMode(moduloRele, OUTPUT);
   //pinMode(motorDC_1, OUTPUT);
   pinMode(motorDC_2, OUTPUT);
   pinMode(motorDC_3, OUTPUT);
   pinMode(motorDC_4, OUTPUT);
-  digitalWrite(moduloRele, LOW);
   //digitalWrite(motorDC_1, HIGH);
   digitalWrite(motorDC_2, HIGH);
   digitalWrite(motorDC_3, HIGH);
   digitalWrite(motorDC_4, HIGH);
+  digitalWrite(pin11, LOW);
+  digitalWrite(pin12, LOW);
+  digitalWrite(moduloRele, LOW);
   Timer1.initialize(6000000);
   Timer1.attachInterrupt(interrupcao);
-  lcd1.begin(16,2);
-
-
-
-  
+  lcd1.begin(16,2); 
 }
 
 void Descelularizacao::Enviar_velocidade(int speed){ 
@@ -99,27 +86,27 @@ void Descelularizacao::MotorPasso_Pressao(float setpoint_pressao){
 }
 
 void Descelularizacao::OFF_Motores(){
-   digitalWrite(pin11, LOW);
-   digitalWrite(pin12, LOW);
-   digitalWrite(moduloRele, LOW);
    //digitalWrite(motorDC_1, HIGH);
    digitalWrite(motorDC_2, HIGH);
    digitalWrite(motorDC_3, HIGH);
    digitalWrite(motorDC_4, HIGH);
+   digitalWrite(pin11, LOW);
+   digitalWrite(pin12, LOW);
+   digitalWrite(moduloRele, LOW);
 }
  
 void Descelularizacao::ON_MotorDC_2(){
    digitalWrite(moduloRele, HIGH);
-   digitalWrite(motorDC_2, LOW);
    digitalWrite(motorDC_3, HIGH);
    digitalWrite(motorDC_4, HIGH);
+   digitalWrite(motorDC_2, LOW);
 }
 
 void Descelularizacao::ON_MotorDC_3(){
    digitalWrite(moduloRele, HIGH);
    digitalWrite(motorDC_2, HIGH);
-   digitalWrite(motorDC_3, LOW);
    digitalWrite(motorDC_4, HIGH);
+   digitalWrite(motorDC_3, LOW);
 }
 
 void Descelularizacao::ON_MotorDC_4(){
@@ -141,40 +128,46 @@ void Descelularizacao::alterar_PID(float novo_kp,float novo_ki,float novo_kd){
    kd = novo_kd;
 }
 
-int Descelularizacao::teste(int 
-
-x){
-   return x+2;
-}
 
 void Descelularizacao::ligar (int m){
-  if(m=3){
-    Descelularizacao::ON_MotorDC_3();
-    vazao = 67.9260;}
-  if(m=4){
-    Descelularizacao::ON_MotorDC_4();
-    vazao = 52.0395;}
+  if(m==3){
+    Descelularizacao::ON_MotorDC_3();}
+  if(m==4){
+    Descelularizacao::ON_MotorDC_4();}
   }
 
-void Descelularizacao::motor (float pressao, int tempo, char inicio[10], char final[10]){
+void Descelularizacao::vazaodet(int y){
+  if(y==3){
+    vazao = 67.93;}
+  if(y==4){
+    vazao = 52.04;}
+    }  
 
-  tempoencher = volume_total/vazao;
-  tempocritico = volume_critico/vazao;
-  tempototal = (volume_total/vazao) + tempo + (volume_total/vazao);
-  tempocriticoesvaziar = volume_critico/vazaoesvaziar;
-  tempoesvaziar = tempototal - tempocriticoesvaziar;
+void Descelularizacao::motor (float pressao, int tempo, int inicio, int final){
+
+  Descelularizacao::vazaodet(x);
+  
+  tempoencher = (volume_total - volume_critico)/vazao;
+  tempocritico = (volume_critico/vazao)*60000;
+  tempototal = tempoencher + tempo + (volume_total - volume_critico)/vazaoesvaziar;
+  tempoesvaziar = tempototal - (volume_total - volume_critico)/vazaoesvaziar;
+  tempocriticoesvaziar = (volume_critico/vazaoesvaziar)*60000;
   
   lcd1.clear();
-  zerar_tempo();
 
-
-  if (inicio=="encher"){
-    Descelularizacao::ligar(x);
+  if (inicio==1){
+    ligar(x);
+    Serial.println("enchimento critico motor 3");
     delay(tempocritico);
-    Descelularizacao::OFF_MotorDC();}
+    OFF_MotorDC();
+    Serial.println("desligar motoresDC");}
 
-  while(minutos<tempototal){
-    Descelularizacao::MotorPasso_Pressao(pressao);
+    zerar_tempo();
+    ON_MotorPasso();
+    
+  while(minutos<=tempototal){
+    MotorPasso_Pressao(pressao);
+    Serial.println("motor de passo");
     
     lcd1.setCursor(0,0);
     lcd1.print(velocidade);
@@ -183,20 +176,63 @@ void Descelularizacao::motor (float pressao, int tempo, char inicio[10], char fi
     lcd1.setCursor(0,1);
     lcd1.print(tempo);
     
-      if(inicio=="encher" && minutos<tempoencher){
-        Descelularizacao::ligar(x);}
-      if(minutos>tempoencher){
-        Descelularizacao::OFF_MotorDC();}
-      if(final=="esvaziar" && minutos>tempoesvaziar){
-        Descelularizacao::ON_MotorDC_2();}}
+      if(inicio==1 && minutos<=tempoencher){
+        ligar(x);
+        Serial.println("motor 3");}
+      if(minutos>tempoencher && minutos<tempoesvaziar){
+        OFF_MotorDC();
+        Serial.println("desligar");}
+      if(final==0 && minutos>=tempoesvaziar){
+        ON_MotorDC_2();
+        Serial.println("motor 2");}}
   
-  Descelularizacao::OFF_Motores();
+  OFF_Motores();
+  Serial.println("desligar motores");
 
-  if(final=="esvaziar"){
-    Descelularizacao::ON_MotorDC_2();
-    delay(tempocritico + 3000);
-    Descelularizacao::OFF_MotorDC();}
+  if(final==0){
+    ON_MotorDC_2();
+    Serial.println("esvaziamento critico motor 2");
+    delay(tempocriticoesvaziar + 3000);
+    OFF_MotorDC();
+    Serial.println("fim");}
     
 }
 
-  
+void Descelularizacao::serial(){
+ON_MotorDC_4();
+delay(3000);
+OFF_MotorDC();
+delay(6000);
+
+// Serial.println(segundos);
+
+//  ON_MotorDC_2();
+//  Serial.println("motor2");
+//  delay (2000);
+//  ON_MotorDC_3();
+//  Serial.println("motor3");
+//  delay (2000);
+//  ON_MotorDC_4();
+//  Serial.println("motor4");
+//  delay (2000);
+//  OFF_MotorDC();
+//  delay (10000);
+
+//  while(segundos==1){
+//    ON_MotorDC_4();
+//    Serial.println("motor 4");}
+//    OFF_Motores();
+//
+//  while(segundos==2){
+//    ON_MotorDC_3();
+//    Serial.println("motor 3");}
+//    OFF_Motores();
+//
+//  while(segundos==3){
+//    ON_MotorDC_2();
+//    Serial.println("motor 2");}
+//    OFF_Motores();
+//
+//  if(segundos>4){
+//    segundos=0;}
+}
