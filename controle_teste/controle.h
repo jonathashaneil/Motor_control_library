@@ -20,8 +20,6 @@
     #define motorDC_4 A1
 
    
-    
-    byte tempo_def(unsigned long);
     void interrupcao();
     void zerar_tempo();
 
@@ -39,11 +37,11 @@
           void alterar_PID(float, float, float);
           void configuracao();
           void Enviar_velocidade(int);
-          void motor (float, int, char*, char*);
+          void motor (float, int, int, int);
           void ligar(int);
           void OFF_MotorDC();
-         
-          int teste(int);
+          void serial();
+          void vazaodet(int);
          
 
           float pressao;
@@ -59,19 +57,20 @@
           float ki = -0.5;
           float kd = -0.0;
           int i;
-          int tempoencher;
-          int tempototal;
-          int tempoesvaziar;
-          int tempocritico;
+          float tempoencher;
+          float tempototal;
+          float tempoesvaziar;
+          float tempocritico;
           int x;
           int volume_total;
           int volume_critico;
           int tempo;
-          char inicio[10];
-          char final[10];
+          int inicio;
+          int final;
           float vazao;
-          int tempocriticoesvaziar;
-          float vazaoesvaziar = 70.7682;
+          float tempocriticoesvaziar;
+          float vazaoesvaziar = 70.77;
+          int y;
 
      
           
