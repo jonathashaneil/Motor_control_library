@@ -141,11 +141,11 @@ void Descelularizacao::vazaodet(int y){
     vazao = 67.93;}
   if(y==4){
     vazao = 52.04;}
-    }  
+  }  
 
 void Descelularizacao::motor (float pressao, int tempo, int inicio, int final){
 
-  Descelularizacao::vazaodet(x);
+  vazaodet(x);
   
   tempoencher = (volume_total - volume_critico)/vazao;
   tempocritico = (volume_critico/vazao)*60000;
@@ -154,7 +154,8 @@ void Descelularizacao::motor (float pressao, int tempo, int inicio, int final){
   tempocriticoesvaziar = (volume_critico/vazaoesvaziar)*60000;
   
   lcd1.clear();
-
+  zerar_tempo();
+  
   if (inicio==1){
     ligar(x);
     Serial.println("enchimento critico motor 3");
@@ -199,10 +200,10 @@ void Descelularizacao::motor (float pressao, int tempo, int inicio, int final){
 }
 
 void Descelularizacao::serial(){
-ON_MotorDC_4();
-delay(3000);
-OFF_MotorDC();
-delay(6000);
+//ON_MotorDC_4();
+//delay(3000);
+//OFF_MotorDC();
+//delay(6000);
 
 // Serial.println(segundos);
 
@@ -218,21 +219,23 @@ delay(6000);
 //  OFF_MotorDC();
 //  delay (10000);
 
-//  while(segundos==1){
-//    ON_MotorDC_4();
-//    Serial.println("motor 4");}
-//    OFF_Motores();
-//
-//  while(segundos==2){
-//    ON_MotorDC_3();
-//    Serial.println("motor 3");}
-//    OFF_Motores();
-//
-//  while(segundos==3){
-//    ON_MotorDC_2();
-//    Serial.println("motor 2");}
-//    OFF_Motores();
-//
-//  if(segundos>4){
-//    segundos=0;}
+digitalWrite(moduloRele, HIGH);
+
+  while(segundos==1){
+    digitalWrite(motorDC_4, LOW);
+    Serial.println("motor 4");}
+    digitalWrite(motorDC_4, HIGH);
+
+  while(segundos==2){
+    digitalWrite(motorDC_3, LOW);
+    Serial.println("motor 3");}
+    digitalWrite(motorDC_3, HIGH);
+
+  while(segundos==3){
+    digitalWrite(motorDC_2, LOW);
+    Serial.println("motor 2");}
+    digitalWrite(motorDC_2, HIGH);
+
+  if(segundos>4){
+    segundos=0;}
 }
