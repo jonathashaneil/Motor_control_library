@@ -13,8 +13,8 @@ void setup() {
   descel.x = 3; //Qual motor será utilizado para enchimento
   descel.inicio = encher;
   descel.final = esvaziar;
-  descel.volume_total = 100; //Em mL
-  descel.volume_critico = 20; //Em mL
+  descel.volume_total = 30; //Em mL
+  descel.volume_critico = 10; //Em mL
 
 }
 
@@ -22,14 +22,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   
-   descel.motor(descel.pressao,descel.tempo,descel.inicio,descel.final);
-  
-//  descel.ON_MotorPasso();
-//  descel.MotorPasso_Pressao(descel.pressao);
+descel.motor(descel.pressao,descel.tempo,descel.inicio,descel.final);
 
-//  Serial.println(descel.tempocritico);
-
-//  descel.serial();
+// descel.serial();
 
 //  descel.ON_MotorDC_2();
 //  delay (2000);
